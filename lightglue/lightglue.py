@@ -323,6 +323,7 @@ class LightGlue(nn.Module):
         "width_confidence": 0.99,  # point pruning, disable with -1
         "filter_threshold": 0.1,  # match threshold
         "weights": None,
+        "weights_path": None,
     }
 
     # Point pruning involves an overhead (gather).
@@ -335,7 +336,6 @@ class LightGlue(nn.Module):
     }
 
     required_data_keys = ["image0", "image1"]
-
     version = "v0.1_arxiv"
     url = "https://github.com/cvg/LightGlue/releases/download/{}/{}_lightglue.pth"
 
@@ -400,10 +400,15 @@ class LightGlue(nn.Module):
 
         state_dict = None
         if features is not None:
-            fname = f"{conf.weights}_{self.version.replace('.', '-')}.pth"
-            state_dict = torch.hub.load_state_dict_from_url(
-                self.url.format(self.version, features), file_name=fname
-            )
+            if self.conf.weights_path is None:
+                fname = f"{conf.weights}_{self.version.replace('.', '-')}.pth"
+                state_dict = torch.hub.load_state_dict_from_url(
+                    self.url.format(self.version, features), file_name=fname
+                )
+            else:
+                state_dict = torch.load(
+                    self.conf.weights_path, map_location=torch.device("cpu")
+                )
             self.load_state_dict(state_dict, strict=False)
         elif conf.weights is not None:
             path = Path(__file__).parent

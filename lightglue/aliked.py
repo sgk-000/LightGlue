@@ -615,9 +615,8 @@ class ALIKED(Extractor):
         "max_num_keypoints": -1,
         "detection_threshold": 0.2,
         "nms_radius": 2,
+        "weights_path": None,
     }
-
-    checkpoint_url = "https://github.com/Shiaoming/ALIKED/raw/main/models/{}.pth"
 
     n_limit_max = 20000
 
@@ -687,9 +686,14 @@ class ALIKED(Extractor):
             else self.n_limit_max,
         )
 
-        state_dict = torch.hub.load_state_dict_from_url(
-            self.checkpoint_url.format(conf.model_name), map_location="cpu"
-        )
+        state_dict = None
+        if self.conf.weights_path is not None:
+            state_dict = torch.load(self.conf.weights_path)
+        else:
+            url = "https://github.com/Shiaoming/ALIKED/raw/main/models/{}.pth"
+            state_dict = torch.hub.load_state_dict_from_url(
+                url.format(conf.model_name), map_location="cpu"
+            )
         self.load_state_dict(state_dict, strict=True)
 
     def get_resblock(self, c_in, c_out, conv_type, mask):

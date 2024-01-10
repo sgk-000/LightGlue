@@ -110,6 +110,7 @@ class SuperPoint(Extractor):
         "max_num_keypoints": None,
         "detection_threshold": 0.0005,
         "remove_borders": 4,
+        "weights_path": None,
     }
 
     preprocess_conf = {
@@ -141,8 +142,13 @@ class SuperPoint(Extractor):
             c5, self.conf.descriptor_dim, kernel_size=1, stride=1, padding=0
         )
 
-        url = "https://github.com/cvg/LightGlue/releases/download/v0.1_arxiv/superpoint_v1.pth"  # noqa
-        self.load_state_dict(torch.hub.load_state_dict_from_url(url))
+        state_dict = None
+        if self.conf.weights_path is not None:
+            state_dict = torch.load(self.conf.weights_path)
+        else:
+            url = "https://github.com/cvg/LightGlue/releases/download/v0.1_arxiv/superpoint_v1.pth"  # noqa
+            state_dict = torch.hub.load_state_dict_from_url(url)
+        self.load_state_dict(state_dict)
 
         if self.conf.max_num_keypoints is not None and self.conf.max_num_keypoints <= 0:
             raise ValueError("max_num_keypoints must be positive or None")

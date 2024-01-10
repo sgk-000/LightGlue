@@ -23,7 +23,17 @@ class DISK(Extractor):
 
     def __init__(self, **conf) -> None:
         super().__init__(**conf)  # Update with default configuration.
-        self.model = kornia.feature.DISK.from_pretrained(self.conf.weights)
+        state_dict = None
+        if self.conf.weights == "depth" or self.conf.weights == "epipolar":
+            self.model = kornia.feature.DISK.from_pretrained(self.conf.weights)
+        else:
+            self.model = kornia.DISK().to(torch.device("cuda"))
+            state_dict = torch.load(
+                self.conf.weights,
+                map_location=torch.device("cuda"),
+            )
+            self.model.load_state_dict(state_dict["extractor"])
+        self.model.eval()
 
     def forward(self, data: dict) -> dict:
         """Compute keypoints, scores, descriptors for image"""
